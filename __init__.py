@@ -1,4 +1,3 @@
-# __init__.py
 import os
 import requests
 import zipfile
@@ -13,9 +12,11 @@ MODEL_SMALL = os.path.join(BASE_URL, 'tf20-bert-base-cased/base.zip')
 MODEL_LARGE = os.path.join(BASE_URL, 'tf20-bert-base-cased/large.zip')
 BASE_PATH = os.path.join(str(Path.home()), '.pipcook', 'bert-model')
 
-def download(url, filepath):
+def download(url, folderpath, filepath):
   r = requests.get(url, allow_redirects=True)
-  with open(filepath, 'wb') as f:
+  if not os.path.exists(folderpath):
+    os.makedirs(folderpath)
+  with open(os.path.join(folderpath, filepath), 'wb+') as f:
     f.write(r.content)
 
 def unZipData(src, dest):
@@ -28,15 +29,15 @@ def main(data, args):
   gpus = '0' if not hasattr(args, 'gpus') else args.gpus
   recoverPath = None if not hasattr(args, 'recoverPath') else args.recoverPath
 
-  if not (bertModel == 'base' || bertModel == 'large'):
+  if not (bertModel == 'base' or bertModel == 'large'):
     raise Exception('bertModel must be base or large')
 
   modelPath = os.path.join(BASE_PATH, bertModel)
   modelDownloadUrl = MODEL_SMALL if bertModel == 'base' else MODEL_LARGE
   modelCheckpoint = os.path.join(modelPath, 'bert_model.ckpt.index')
 
-  if os.path.exists(modelCheckpoint):
-    download(modelDownloadUrl, os.path.join(BASE_PATH, bertModel + '.zip'))
+  if not os.path.exists(modelCheckpoint):
+    download(modelDownloadUrl, BASE_PATH, bertModel + '.zip')
     unZipData(os.path.join(BASE_PATH,  bertModel + '.zip'), BASE_PATH)
     os.remove(os.path.join(BASE_PATH,  bertModel + '.zip'))
 
@@ -69,6 +70,3 @@ def main(data, args):
       return output
 
   return PipcookModel()
-  
-  
-  
